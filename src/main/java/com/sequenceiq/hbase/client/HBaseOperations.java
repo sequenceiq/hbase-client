@@ -15,6 +15,8 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sequenceiq.hbase.model.HBaseRow;
+
 public class HBaseOperations {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HBaseOperations.class);

@@ -93,4 +93,14 @@ public class HBaseManager {
         return result;
     }
 
+    public HTableDescriptor getDescriptor(String table) {
+        HTableDescriptor descriptor = null;
+        try {
+            descriptor = hBaseAdmin.getTableDescriptor(table.getBytes());
+        } catch (IOException e) {
+            LOGGER.warn("Cannot get table descriptor of table: {}", table, e);
+        }
+        return descriptor;
+    }
+
 }

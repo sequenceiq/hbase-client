@@ -1,6 +1,6 @@
 ext.buildTimestamp = new Date().format('yyyy-MM-dd HH:mm:ss')
 def buildNumber = System.getenv("BUILD_NUMBER")
-version = new ProjectVersion(0, 2, buildNumber != null ? buildNumber : "0")
+version = new ProjectVersion(0, 1, buildNumber != null ? buildNumber : "0")
 
 class ProjectVersion {
     Integer major

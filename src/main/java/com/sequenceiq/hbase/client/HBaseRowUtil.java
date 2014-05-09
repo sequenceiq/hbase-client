@@ -10,6 +10,11 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.sequenceiq.hbase.model.Column;
+import com.sequenceiq.hbase.model.Family;
+import com.sequenceiq.hbase.model.HBaseRow;
+import com.sequenceiq.hbase.model.Qualifier;
+
 public final class HBaseRowUtil {
 
     private HBaseRowUtil() {

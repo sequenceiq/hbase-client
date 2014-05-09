@@ -1,4 +1,4 @@
-package com.sequenceiq.hbase.client;
+package com.sequenceiq.hbase.model;
 
 import java.io.Serializable;
 

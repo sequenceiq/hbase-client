@@ -35,6 +35,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.sequenceiq.hbase.model.Column;
+import com.sequenceiq.hbase.model.Family;
+import com.sequenceiq.hbase.model.HBaseRow;
+import com.sequenceiq.hbase.model.Qualifier;
+
 @RunWith(MockitoJUnitRunner.class)
 public class HBaseOperationsTest {
 

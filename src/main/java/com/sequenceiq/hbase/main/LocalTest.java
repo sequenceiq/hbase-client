@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sequenceiq.hbase.client.HBaseOperations;
-import com.sequenceiq.hbase.client.HBaseRow;
 import com.sequenceiq.hbase.client.HBaseTablePool;
+import com.sequenceiq.hbase.model.HBaseRow;
 
 public class LocalTest {
 

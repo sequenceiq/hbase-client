@@ -2,6 +2,7 @@ package com.sequenceiq.hbase.admin;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -12,6 +13,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
+import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +31,8 @@ public class HBaseManagerTest {
 
     @Mock
     private HBaseAdmin hBaseAdmin;
+    @Mock
+    private HTableDescriptor descriptor;
     @Captor
     private ArgumentCaptor<HTableDescriptor> descriptorCaptor;
 
@@ -234,6 +238,30 @@ public class HBaseManagerTest {
 
         // THEN
         assertTrue(result);
+    }
+
+    @Test
+    public void testGetDescriptorForNonExistingTable() throws IOException {
+        // GIVEN
+        doThrow(new TableNotFoundException()).when(hBaseAdmin).getTableDescriptor(TABLE_NAME.getBytes());
+
+        // WHEN
+        HTableDescriptor descriptor = hBaseManager.getDescriptor(TABLE_NAME);
+
+        // THEN
+        assertNull(descriptor);
+    }
+
+    @Test
+    public void testGetDescriptorForExistingTable() throws IOException {
+        // GIVEN
+        when(hBaseAdmin.getTableDescriptor(TABLE_NAME.getBytes())).thenReturn(descriptor);
+
+        // WHEN
+        HTableDescriptor result = hBaseManager.getDescriptor(TABLE_NAME);
+
+        // THEN
+        assertEquals(descriptor, result);
     }
 
 

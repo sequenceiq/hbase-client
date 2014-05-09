@@ -18,7 +18,6 @@ def parsedConfig = new ConfigSlurper(env).parse(configFile.toURL())
 allprojects { ext.config = parsedConfig }
 allprojects { apply from: "$rootDir/gradle/versioning.gradle" }
 
-
 group = 'com.sequenceiq'
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -39,23 +38,24 @@ repositories {
     maven { url "http://seq-repo.s3-website-eu-west-1.amazonaws.com/snapshots" }
 }
 
-configurations { deployerJars }
+configurations {
+    deployerJars
+    all*.exclude group: 'org.slf4j', module: 'log4j'
+}
 
 dependencies {
     compile("org.apache.commons:commons-lang3:3.2.1")
-    compile(group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoopVersion)
-    compile(group: 'org.apache.hbase', name: 'hbase', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
-    compile(group: 'org.apache.hbase', name: 'hbase-common', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
-    compile(group: 'org.apache.hbase', name: 'hbase-client', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
-    compile(group: 'org.apache.hbase', name: 'hbase-server', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
-    testCompile(group: 'org.mockito', name: 'mockito-all', version: '1.9.5')
+    compile("org.apache.hadoop:hadoop-common:${hadoopVersion}")
+    compile("org.apache.hbase:hbase:${hbaseVersion}")
+    compile("org.apache.hbase:hbase-common:${hbaseVersion}")
+    compile("org.apache.hbase:hbase-client:${hbaseVersion}")
+    compile("org.apache.hbase:hbase-server:${hbaseVersion}")
+    testCompile("org.mockito:mockito-all:1.9.5")
     testCompile("org.codehaus.groovy:groovy-all:2.1.7")
-    deployerJars "org.springframework.build.aws:org.springframework.build.aws.maven:3.0.0.RELEASE"
+    deployerJars("org.springframework.build.aws:org.springframework.build.aws.maven:3.0.0.RELEASE")
 }
 
 jar { baseName = 'hbase-client' }
-
-
 
 uploadArchives {
     repositories {
@@ -119,7 +119,7 @@ task wrapper(type: Wrapper) { gradleVersion = '1.12' }
 task buildInfo(type: BuildInfoTask) {
     destination = file("$buildDir")
     basename = jar.baseName
-    buildVersion =  version
+    buildVersion = version
 }
 
 compileJava.dependsOn buildInfo
@@ -140,7 +140,8 @@ class BuildInfoTask extends DefaultTask {
                     "ARTIFACT_VERSION=" + buildVersion,
                     "GIT_REVISION=" + ext.revision,
                     "GIT_BRANCH=" + ext.branch
-            ].each { out.println it } }
+            ].each { out.println it }
+        }
     }
 
     def getGitRevParseInfo(what) {

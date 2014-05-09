@@ -1,4 +1,4 @@
-package com.sequenceiq.hbase.client;
+package com.sequenceiq.hbase.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
