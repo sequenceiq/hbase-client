@@ -1,0 +1,18 @@
+*.class
+
+# Package Files #
+*.war
+*.ear
+
+# eclipse
+.settings
+.classpath
+.project
+
+# gradle
+.gradle
+bin
+build/
+
+#osx
+.DS\_Store

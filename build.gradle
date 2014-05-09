@@ -1,0 +1,151 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'sonar-runner'
+apply plugin: 'jacoco'
+apply plugin: 'checkstyle'
+
+eclipse {
+    classpath { downloadSources = true }
+}
+
+def env = project.hasProperty('env') ? project.getProperty('env') : 'local'
+logger.quiet "Loading configuration for environment '$env'"
+
+def configFile = file("$rootDir/gradle/config/buildConfig.groovy")
+def parsedConfig = new ConfigSlurper(env).parse(configFile.toURL())
+
+allprojects { ext.config = parsedConfig }
+allprojects { apply from: "$rootDir/gradle/versioning.gradle" }
+
+
+group = 'com.sequenceiq'
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts { archives sourcesJar }
+
+repositories {
+    mavenCentral();
+    maven { url "http://repo.hortonworks.com/content/repositories/releases" }
+    maven { url "https://repository.apache.org/content/groups/staging" }
+    maven { url "https://repository.pentaho.org/artifactory/repo" }
+    maven { url "https://repository.cloudera.com/artifactory/cloudera-repos" }
+    maven { url "http://mvnrepository.com/artifact" }
+    maven { url "http://seq-repo.s3-website-eu-west-1.amazonaws.com/releases" }
+    maven { url "http://seq-repo.s3-website-eu-west-1.amazonaws.com/snapshots" }
+}
+
+configurations { deployerJars }
+
+dependencies {
+    compile("org.apache.commons:commons-lang3:3.2.1")
+    compile(group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoopVersion)
+    compile(group: 'org.apache.hbase', name: 'hbase', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
+    compile(group: 'org.apache.hbase', name: 'hbase-common', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
+    compile(group: 'org.apache.hbase', name: 'hbase-client', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
+    compile(group: 'org.apache.hbase', name: 'hbase-server', version: hbaseVersion) { exclude group: 'org.slf4j'; exclude group: 'log4j' }
+    testCompile(group: 'org.mockito', name: 'mockito-all', version: '1.9.5')
+    testCompile("org.codehaus.groovy:groovy-all:2.1.7")
+    deployerJars "org.springframework.build.aws:org.springframework.build.aws.maven:3.0.0.RELEASE"
+}
+
+jar { baseName = 'hbase-client' }
+
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            configuration = configurations.deployerJars
+            repository(url: "s3://seq-repo/releases") {
+                authentication(userName: "$System.env.aws_access_key_id", passphrase: "$System.env.aws_secret_access_key")
+            }
+            snapshotRepository(url: "s3://seq-repo/snapshots") {
+                authentication(userName: "$System.env.aws_access_key_id", passphrase: "$System.env.aws_secret_access_key")
+            }
+        }
+    }
+}
+
+checkstyleMain {
+    ignoreFailures = false
+    configProperties = ['config_loc': "$projectDir/config/checkstyle"]
+}
+
+checkstyleTest {
+    ignoreFailures = false
+    configProperties = ['config_loc': "$projectDir/config/checkstyle"]
+}
+
+test { systemProperties 'property': 'value' }
+
+jacoco {
+    toolVersion = "0.6.2.201302030002"
+    reportsDir = file("$buildDir/reports/jacoco")
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.destination "${buildDir}/jacocoHtml"
+    }
+}
+
+sonarRunner {
+    jacoco {
+        append = false
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+        classDumpFile = file("$buildDir/jacoco/classpathdumps")
+    }
+    sonarProperties {
+        property "sonar.host.url", "$config.sonar_host_url"
+        property "sonar.jdbc.url", "$config.sonar_jdbc_url"
+        property "sonar.jdbc.driverClassName", sonar_jdbc_driverClassName
+        property "sonar.jdbc.username", "$System.env.sonar_jdbc_username"
+        property "sonar.jdbc.password", "$System.env.sonar_jdbc_password"
+        property "project.reporting.outputEncoding", "UTF-8"
+        property "sonar.projectKey", "hbase-client"
+        property "sonar.projectName", "hbase-client"
+    }
+}
+
+task wrapper(type: Wrapper) { gradleVersion = '1.12' }
+
+task buildInfo(type: BuildInfoTask) {
+    destination = file("$buildDir")
+    basename = jar.baseName
+    buildVersion =  version
+}
+
+compileJava.dependsOn buildInfo
+
+class BuildInfoTask extends DefaultTask {
+    File destination = new File("build.info")
+    String basename
+    String buildVersion
+
+    @TaskAction
+    def writeBuildInfo() {
+        ext.revision = getGitRevParseInfo("--short")
+        ext.branch = getGitRevParseInfo("--abbrev-ref")
+        destination.mkdirs()
+        new File(destination, "build.info").withWriter { out ->
+            [
+                    "ARTIFACT_BASENAME=" + basename,
+                    "ARTIFACT_VERSION=" + buildVersion,
+                    "GIT_REVISION=" + ext.revision,
+                    "GIT_BRANCH=" + ext.branch
+            ].each { out.println it } }
+    }
+
+    def getGitRevParseInfo(what) {
+        def cmd = "git rev-parse " + what + " HEAD"
+        def proc = cmd.execute()
+        proc.text.trim()
+    }
+}
