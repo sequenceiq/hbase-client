@@ -20,7 +20,7 @@ def grgit = Grgit.open(project.file('.'))
 def jobName = System.getenv("JOB_NAME")
 def branch = grgit.branch.current.name
 
-version = new ProjectVersion(0, 1, jobName != null ? buildId : "DEV", branch)
+version = new ProjectVersion(0, 2, jobName != null ? buildId : "DEV", branch)
 
 class ProjectVersion {
     Integer major
