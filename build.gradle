@@ -61,10 +61,10 @@ uploadArchives {
     repositories {
         mavenDeployer {
             configuration = configurations.deployerJars
-            repository(url: "s3://seq-repo/releases") {
+            repository(url: "s3://maven.sequenceiq.com/releases") {
                 authentication(userName: "$System.env.aws_access_key_id", passphrase: "$System.env.aws_secret_access_key")
             }
-            snapshotRepository(url: "s3://seq-repo/snapshots") {
+            snapshotRepository(url: "s3://maven.sequenceiq.com/snapshots") {
                 authentication(userName: "$System.env.aws_access_key_id", passphrase: "$System.env.aws_secret_access_key")
             }
         }
